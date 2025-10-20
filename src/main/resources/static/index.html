@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Stark Security Dashboard</title>
+</head>
+<body>
+  <h1>Stark Security - Alertas en tiempo real</h1>
+  <div id="status">Conectando...</div>
+  <ul id="alerts"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script>
+    const socket = new SockJS('/ws');
+    const stomp = Stomp.over(socket);
+    stomp.connect({}, function() {
+      document.getElementById('status').textContent = 'Conectado';
+      stomp.subscribe('/topic/alerts', function(message) {
+        const alert = JSON.parse(message.body);
+        const li = document.createElement('li');
+        li.textContent = `[${alert.severity}] ${alert.type} ${alert.sensorId} - ${alert.message}`;
+        document.getElementById('alerts').appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
