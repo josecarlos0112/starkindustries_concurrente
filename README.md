@@ -1,10 +1,9 @@
 # Implementación de un Sistema de Seguridad Concurrente en Stark Industries
 
 ## Integrantes del grupo
-- (Rellena aquí) Nombre 1 — Rol
-- (Rellena aquí) Nombre 2 — Rol
-- (Rellena aquí) Nombre 3 — Rol
-- (Rellena aquí) Nombre 4 — Rol
+- José Carlos Zorrilla García
+- Daniel de Alfonsa
+- Dmitry Kravesti
 
 ## Resumen de la solución
 Sistema de seguridad en tiempo real construido con Spring Boot que procesa lecturas de múltiples sensores concurrentemente mediante `@Async` y un `ThreadPoolTaskExecutor`. Incluye control de acceso con Spring Security, notificaciones en tiempo real vía WebSocket/STOMP, monitorización con Actuator y logging estructurado.
