@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: stark-security-concurrent
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,threaddump,loggers
+logging:
+  level:
+    root: info
+    com.stark.security: info

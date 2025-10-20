@@ -1,0 +1,42 @@
+### MOVIMIENTO
+POST http://localhost:8080/api/sensors/reading
+Authorization: Basic op op123
+Content-Type: application/json
+
+{
+  "type": "MOTION",
+  "sensorId": "M-01",
+  "timestamp": 1730000000000,
+  "value": 0.9
+}
+
+### TEMPERATURA
+POST http://localhost:8080/api/sensors/reading
+Authorization: Basic admin admin123
+Content-Type: application/json
+
+{
+  "type": "TEMPERATURE",
+  "sensorId": "T-01",
+  "timestamp": 1730000001000,
+  "value": 75.0
+}
+
+### ACCESO
+POST http://localhost:8080/api/sensors/reading
+Authorization: Basic admin admin123
+Content-Type: application/json
+
+{
+  "type": "ACCESS",
+  "sensorId": "D-01",
+  "timestamp": 1730000002000,
+  "value": 1,
+  "metadata": "BADGE-XYZ"
+}
+
+### ACTUATOR
+GET http://localhost:8080/actuator/health
+
+GET http://localhost:8080/actuator/metrics
+Authorization: Basic admin admin123
