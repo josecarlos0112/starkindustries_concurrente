@@ -1,7 +1,7 @@
 # Implementación de un Sistema de Seguridad Concurrente en Stark Industries
 
 ## Integrantes del grupo
-- José Carlos Zorrilla García
+- José Carlos Zorra García
 - Daniel de Alfonsa
 - Dmitry Kravesti
 
