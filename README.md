@@ -1,9 +1,9 @@
 # Implementación de un Sistema de Seguridad Concurrente en Stark Industries
 
 ## Integrantes del grupo
-- José Carlos Zorra García
-- Daniel de Alfonsa
-- Dmitry Kravesti
+- José Carlos Zorrilla García
+- Daniel de Alfonso Martínez
+- Dmitry Kravets
 
 ## Resumen de la solución
 Sistema de seguridad en tiempo real construido con Spring Boot que procesa lecturas de múltiples sensores concurrentemente mediante `@Async` y un `ThreadPoolTaskExecutor`. Incluye control de acceso con Spring Security, notificaciones en tiempo real vía WebSocket/STOMP, monitorización con Actuator y logging estructurado.
