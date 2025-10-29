@@ -11,7 +11,6 @@ public class EmailNotifier implements Notifier {
 
     @Override
     public void send(Alert alert) {
-        // Stub: integración real con SMTP/SendGrid se puede añadir
         log.info("[EmailNotifier] Enviar email: {} - {}", alert.id(), alert.message());
     }
 }

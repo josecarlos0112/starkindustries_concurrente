@@ -25,7 +25,6 @@ public class NotificationService {
   public void notifyAlert(Alert alert) {
     log.warn("ALERT {} [{}] from {} -> {}", alert.id(), alert.severity(), alert.sensorId(), alert.message());
     messagingTemplate.convertAndSend("/topic/alerts", alert);
-    // Disparar notificaciones externas (email/push) si están configuradas
     for (Notifier notifier : notifiers) {
       try {
         notifier.send(alert);
