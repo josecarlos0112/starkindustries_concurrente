@@ -62,7 +62,6 @@ Sistema de seguridad en tiempo real construido con Spring Boot que procesa lectu
 
 ## Diagrama de Arquitectura del Sistema
 El siguiente diagrama presenta los componentes principales, límites de seguridad, y los flujos entre sensores, API, procesamiento, notificaciones y observabilidad.
-![img.png](img.png)
 ```mermaid
 %%{init: {'flowchart': {'htmlLabels': true}} }%%
 flowchart LR
@@ -127,58 +126,6 @@ flowchart LR
   Host --- Logs
 ```
 
-```mermaid
-%% contenido idéntico a docs/deployment.mmd para vista inline
-flowchart TB
-  User[Operador/Admin\nNavegador] -- HTTP/WS:8080 --> LB[Host Único]
-  Sensors[[Sensores en LAN]] -- HTTP:8080 --> LB
-
-  subgraph LB[Servidor]
-    JRE[Java 17 Runtime]
-    App[Spring Boot Jar\n(stark-security-concurrent)]
-    Broker[(STOMP Simple Broker)]
-  end
-
-  App --- Broker
-  classDef infra fill:#eef,stroke:#88a
-  class LB,JRE infra
-```
-```mermaid
-flowchart LR
-  subgraph External
-    Sensors[[Sensores\n(MOTION/TEMP/ACCESS)]]
-    Browser[[Navegador\nDashboard SPA]]
-  end
-
-  subgraph SpringBoot["Aplicación Spring Boot (8080)"]
-    direction TB
-    Security[Spring Security\nInMemoryUserDetailsManager\nSecurityFilterChain]
-    Controller[REST Controller\n`/api/sensors/reading`]
-    Proc[SensorProcessingService\n(lógica por tipo)]
-    Access[AccessControlService\n(credenciales válidas)]
-    Notify[NotificationService\nSimpMessagingTemplate]
-    WSBroker[(Simple STOMP Broker\n`/topic/*`)]
-  end
-
-  Sensors -- HTTP JSON --> Security
-  Browser <-- HTML/CSS/JS -- Security
-  Security --> Controller
-  Controller --> Proc
-  Proc --> Access
-  Proc --> Notify
-  Notify --> WSBroker
-  Browser == STOMP/SockJS == WSBroker
-
-  subgraph Ops["Operación / Observabilidad"]
-    Actuator[/Actuator\n/health /metrics /threaddump/]
-    Logs[[Logback Console]]
-  end
-
-  SpringBoot --- Actuator
-  SpringBoot --- Logs
-```
-
-```
 
 ## Estructura de archivos (relevantes)
 - `pom.xml` — Dependencias y build.
