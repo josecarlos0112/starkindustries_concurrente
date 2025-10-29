@@ -4,26 +4,96 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Stark Security Dashboard</title>
-</head>
-<body>
-  <h1>Stark Security - Alertas en tiempo real</h1>
-  <div id="status">Conectando...</div>
-  <ul id="alerts"></ul>
+  <link rel="icon" type="image/png" href="/logo_recurrente.png"/>
 
+  <link rel="stylesheet" href="/styles.css"/>
+
+  <!-- Librerías cliente -->
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-  <script>
-    const socket = new SockJS('/ws');
-    const stomp = Stomp.over(socket);
-    stomp.connect({}, function() {
-      document.getElementById('status').textContent = 'Conectado';
-      stomp.subscribe('/topic/alerts', function(message) {
-        const alert = JSON.parse(message.body);
-        const li = document.createElement('li');
-        li.textContent = `[${alert.severity}] ${alert.type} ${alert.sensorId} - ${alert.message}`;
-        document.getElementById('alerts').appendChild(li);
-      });
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Stark Security — Alertas en tiempo real</div>
+  <div class="status">
+    <span id="wsDot" class="dot dot--disconnected"></span>
+    <span id="wsText">Desconectado</span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="panel panel--stats">
+    <div class="stat">
+      <div class="stat__label">Total</div>
+      <div id="countTotal" class="stat__value">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Motion</div>
+      <div id="countMotion" class="stat__value">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Access</div>
+      <div id="countAccess" class="stat__value">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Temperature</div>
+      <div id="countTemp" class="stat__value">0</div>
+    </div>
+    <div class="actions">
+      <button id="btnPause" class="btn">⏸️ Pausar</button>
+      <button id="btnResume" class="btn btn--secondary" disabled>▶️ Continuar</button>
+      <button id="btnClear" class="btn btn--danger">🧹 Limpiar</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Filtros</h2>
+    </div>
+    <div class="filters">
+      <label><input type="checkbox" class="flt-type" value="MOTION" checked> Movimientos</label>
+      <label><input type="checkbox" class="flt-type" value="ACCESS" checked> Accesos</label>
+      <label><input type="checkbox" class="flt-type" value="TEMPERATURE" checked> Temperatura</label>
+      <input id="searchBox" class="input" type="text" placeholder="Buscar por sensorId o mensaje..."/>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Eventos por minuto</h2>
+    </div>
+    <canvas id="rateChart" height="120"></canvas>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Alertas</h2>
+    </div>
+    <ul id="alerts" class="alert-list"></ul>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Simulador (opcional)</h2>
+      <small>Usa credenciales válidas (p. ej. <code>op/op123</code>)</small>
+    </div>
+    <div class="simulator">
+      <div class="row">
+        <label>Usuario</label><input id="simUser" class="input" placeholder="op"/>
+        <label>Contraseña</label><input id="simPass" class="input" type="password" placeholder="op123"/>
+      </div>
+      <div class="row">
+        <button class="btn" data-sim="MOTION">Simular Movimiento</button>
+        <button class="btn" data-sim="ACCESS">Simular Acceso</button>
+        <button class="btn" data-sim="TEMPERATURE">Simular Temperatura</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">© Stark Industries</footer>
+
+<script src="/app.js"></script>
 </body>
 </html>
