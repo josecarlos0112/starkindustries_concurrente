@@ -2,15 +2,11 @@ package com.stark.security.service;
 
 import com.stark.security.domain.Alert;
 import com.stark.security.domain.SensorReading;
-import com.stark.security.domain.SensorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class SensorProcessingService {
@@ -24,15 +20,15 @@ public class SensorProcessingService {
     this.accessControlService = accessControlService;
   }
 
-  @Async("sensorExecutor")
-  public CompletableFuture<String> process(SensorReading reading) {
+  // Método ahora síncrono (se eliminó @Async y CompletableFuture)
+  public String process(SensorReading reading) {
     // Simulate per-type processing logic
     switch (reading.type()) {
       case MOTION -> handleMotion(reading);
       case TEMPERATURE -> handleTemperature(reading);
       case ACCESS -> handleAccess(reading);
     }
-    return CompletableFuture.completedFuture("OK");
+    return "OK";
   }
 
   private void handleMotion(SensorReading r) {
@@ -62,3 +58,4 @@ public class SensorProcessingService {
     notificationService.notifyAlert(alert);
   }
 }
+// Nota: revisión - sin uso de @Async, CompletableFuture, Executors, Threads ni colecciones concurrentes.

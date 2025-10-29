@@ -21,3 +21,5 @@ public class NotificationService {
     messagingTemplate.convertAndSend("/topic/alerts", alert);
   }
 }
+
+// Nota: revisión - uso de SimpMessagingTemplate (WebSocket). No hay manejo explícito de hilos o ejecutores.
