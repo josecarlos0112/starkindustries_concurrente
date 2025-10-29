@@ -20,13 +20,15 @@ public class SensorProcessingService {
     this.accessControlService = accessControlService;
   }
 
-  // Método ahora síncrono (se eliminó @Async y CompletableFuture)
   public String process(SensorReading reading) {
-    // Simulate per-type processing logic
+    log.info("Processing reading - Type: {}, SensorId: {}, Value: {}, Timestamp: {}",
+            reading.type(), reading.sensorId(), reading.value(), reading.timestamp());
+
     switch (reading.type()) {
       case MOTION -> handleMotion(reading);
       case TEMPERATURE -> handleTemperature(reading);
       case ACCESS -> handleAccess(reading);
+      default -> log.warn("Unknown sensor type: {}", reading.type());
     }
     return "OK";
   }
@@ -39,9 +41,12 @@ public class SensorProcessingService {
   }
 
   private void handleTemperature(SensorReading r) {
-    log.info("Temperature reading from {} value={}", r.sensorId(), r.value());
+    log.info("Temperature reading from {} value={} (Threshold: 60)", r.sensorId(), r.value());
     if (r.value() > 60) {
-      raise("TEMP-" + UUID.randomUUID(), r, "CRITICAL", "Temperatura anómala");
+      log.info("Temperature alert triggered - value {} > 60", r.value());
+      raise("TEMP-" + UUID.randomUUID(), r, "CRITICAL", "Temperatura anómala: " + r.value() + "°C");
+    } else {
+      log.info("Temperature normal - value {} <= 60", r.value());
     }
   }
 
@@ -55,7 +60,7 @@ public class SensorProcessingService {
 
   private void raise(String id, SensorReading r, String severity, String message) {
     Alert alert = new Alert(id, r.type(), r.sensorId(), severity, message, System.currentTimeMillis());
+    log.info("Raising alert: {}", alert);
     notificationService.notifyAlert(alert);
   }
 }
-// Nota: revisión - sin uso de @Async, CompletableFuture, Executors, Threads ni colecciones concurrentes.

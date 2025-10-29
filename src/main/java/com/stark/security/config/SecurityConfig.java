@@ -12,28 +12,41 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    // Usuario en memoria (para simplicidad). En producción usar PasswordEncoder y almacenamiento seguro.
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails op = User.withDefaultPasswordEncoder().username("op").password("op123").roles("USER").build();
-        UserDetails admin = User.withDefaultPasswordEncoder().username("admin").password("admin123").roles("ADMIN").build();
-        UserDetails guard = User.withDefaultPasswordEncoder().username("guard").password("guard123").roles("USER").build();
+        UserDetails op = User.withDefaultPasswordEncoder()
+                .username("op")
+                .password("op123")
+                .roles("USER", "SENSOR_WRITE") // Agregar rol específico
+                .build();
+        UserDetails admin = User.withDefaultPasswordEncoder()
+                .username("admin")
+                .password("admin123")
+                .roles("ADMIN", "SENSOR_WRITE")
+                .build();
+        UserDetails guard = User.withDefaultPasswordEncoder()
+                .username("guard")
+                .password("guard123")
+                .roles("USER", "SENSOR_WRITE") // Agregar rol específico
+                .build();
         return new InMemoryUserDetailsManager(op, admin, guard);
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // en desarrollo; considerar habilitar en producción
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/styles.css", "/app.js", "/logo_recurrente.png", "/ws/**", "/sockjs/**", "/topic/**", "/api/auth/validate").permitAll()
+                        .requestMatchers("/", "/index.html", "/styles.css", "/app.js",
+                                "/logo_recurrente.png", "/ws/**", "/sockjs/**",
+                                "/topic/**", "/api/auth/validate", "/api/sensors/reading").permitAll() // Permitir endpoint de sensores
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        // La SPA en "/" actúa como página de login; en fallo redirige a /?loginError=true
                         .loginProcessingUrl("/login")
                         .loginPage("/").permitAll()
                         .failureUrl("/?loginError=true")
+                        .defaultSuccessUrl("/", true)
                 )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/").permitAll()
