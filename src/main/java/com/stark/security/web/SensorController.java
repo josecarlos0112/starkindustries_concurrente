@@ -17,7 +17,6 @@ public class SensorController {
 
   @PostMapping("/reading")
   public ResponseEntity<String> ingest(@Valid @RequestBody SensorReading reading) {
-    // Procesamiento asíncrono: no bloquea la petición
     processingService.process(reading);
     return ResponseEntity.accepted().body("OK");
   }

@@ -11,7 +11,6 @@ public class MobilePushNotifier implements Notifier {
 
     @Override
     public void send(Alert alert) {
-        // Stub: integración real con FCM/APNS se puede añadir
         log.info("[MobilePushNotifier] Notificación push: {} - {}", alert.id(), alert.message());
     }
 }
