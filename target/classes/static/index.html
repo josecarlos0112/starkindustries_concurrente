@@ -19,8 +19,36 @@
   <div class="status">
     <span id="wsDot" class="dot dot--disconnected"></span>
     <span id="wsText">Desconectado</span>
+    <!-- botón de logout siempre visible (se dejó sin display:none) -->
+    <button id="btnLogout" class="btn btn--secondary btn--logout">Cerrar sesión</button>
   </div>
 </header>
+
+<!-- Login overlay: el form ahora usa action="/login" method="post" y campos 'username' y 'password' -->
+<div id="loginOverlay" class="login-overlay" style="display:none">
+  <div class="login-panel" role="dialog" aria-modal="true">
+    <h3>Iniciar sesión</h3>
+    <p style="color:var(--muted); margin-top:0; margin-bottom:10px">Selecciona usuario conocido o escribe credenciales.</p>
+    <form id="loginForm" action="/login" method="post">
+      <div class="login-row">
+        <select id="loginPreset">
+          <option value="">-- usuarios conocidos --</option>
+          <option value="op">op</option>
+          <option value="admin">admin</option>
+          <option value="guard">guard</option>
+        </select>
+        <input id="loginUser" name="username" class="input" type="text" placeholder="usuario"/>
+      </div>
+      <div class="login-row">
+        <input id="loginPass" name="password" class="input" type="password" placeholder="contraseña"/>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px">
+        <button id="loginBtn" class="btn" type="submit">Entrar</button>
+      </div>
+      <div id="loginError" class="login-error" style="display:none">Credenciales inválidas.</div>
+    </form>
+  </div>
+</div>
 
 <main class="layout">
   <section class="panel panel--stats">
@@ -79,10 +107,6 @@
       <small>Usa credenciales válidas (p. ej. <code>op/op123</code>)</small>
     </div>
     <div class="simulator">
-      <div class="row">
-        <label>Usuario</label><input id="simUser" class="input" placeholder="op"/>
-        <label>Contraseña</label><input id="simPass" class="input" type="password" placeholder="op123"/>
-      </div>
       <div class="row">
         <button class="btn" data-sim="MOTION">Simular Movimiento</button>
         <button class="btn" data-sim="ACCESS">Simular Acceso</button>
