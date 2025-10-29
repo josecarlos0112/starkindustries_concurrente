@@ -1,4 +1,3 @@
-// java
 package com.stark.security.config;
 
 import org.springframework.context.annotation.Bean;
@@ -17,17 +16,17 @@ public class SecurityConfig {
         UserDetails op = User.withDefaultPasswordEncoder()
                 .username("op")
                 .password("op123")
-                .roles("USER", "SENSOR_WRITE") // Agregar rol específico
+                .roles("OPERATOR")
                 .build();
         UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
                 .password("admin123")
-                .roles("ADMIN", "SENSOR_WRITE")
+                .roles("ADMIN")
                 .build();
         UserDetails guard = User.withDefaultPasswordEncoder()
                 .username("guard")
                 .password("guard123")
-                .roles("USER", "SENSOR_WRITE") // Agregar rol específico
+                .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(op, admin, guard);
     }
@@ -39,7 +38,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/styles.css", "/app.js",
                                 "/logo_recurrente.png", "/ws/**", "/sockjs/**",
-                                "/topic/**", "/api/auth/validate", "/api/sensors/reading").permitAll() // Permitir endpoint de sensores
+                                "/topic/**", "/api/auth/validate").permitAll()
+                        .requestMatchers("/api/sensors/**").hasAnyRole("ADMIN","OPERATOR")
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -55,3 +56,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
