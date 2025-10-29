@@ -163,66 +163,151 @@ function appendPoint(label, value){
 
 setInterval(() => pushChartPoint(), 5000);
 
-// Simulador (único handler)
+// javascript
+// ... código existente ...
+
+// Función mejorada para enviar lecturas
+async function sendReading(payload, user, pass) {
+    let authHeader = '';
+
+    // Intentar obtener credenciales de diferentes fuentes
+    if (user && pass) {
+        authHeader = 'Basic ' + btoa(`${user}:${pass}`);
+    } else {
+        const sessionAuth = getAuth();
+        if (sessionAuth) {
+            authHeader = 'Basic ' + sessionAuth;
+        }
+    }
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+
+    if (authHeader) {
+        headers['Authorization'] = authHeader;
+    }
+
+    try {
+        const res = await fetch('/api/sensors/reading', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            console.error(`Error ${res.status}: ${res.statusText}`);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Error enviando lectura:', error);
+        return false;
+    }
+}
+
+// Función mejorada para el simulador
 $$('[data-sim]').forEach(btn => {
     btn.addEventListener('click', async () => {
         const type = btn.getAttribute('data-sim');
-        const formUser = $('#simUser')?.value;
-        const formPass = $('#simPass')?.value;
-        const user = formUser || sessionStorage.getItem('user') || 'op';
-        const pass = formPass || (() => { const a=getAuth(); return a ? atob(a).split(':')[1] : 'op123'; })();
-        const payload = typeof buildSample === 'function' ? buildSample(type) : { type, sensorId: 'sim', value: 1 };
-        try{
+
+        const user = 'op';
+        const pass = 'op123';
+
+        // Crear payload específico para cada tipo
+        let payload;
+        switch(type) {
+            case 'TEMPERATURE':
+                payload = {
+                    type: type,
+                    sensorId: 'temp-sim-' + Date.now(),
+                    timestamp: Date.now(),
+                    value: 65.0, // Valor que definitivamente debe activar la alerta
+                    metadata: 'temperature_sensor'
+                };
+                break;
+            case 'ACCESS':
+                payload = {
+                    type: type,
+                    sensorId: 'access-sim-' + Date.now(),
+                    timestamp: Date.now(),
+                    value: 1,
+                    metadata: 'BADGE-999' // Badge no autorizado
+                };
+                break;
+            case 'MOTION':
+                payload = {
+                    type: type,
+                    sensorId: 'motion-sim-' + Date.now(),
+                    timestamp: Date.now(),
+                    value: 1, // Valor > 0.5 para activar alerta
+                    metadata: 'motion_sensor'
+                };
+                break;
+        }
+
+        try {
             const ok = await sendReading(payload, user, pass);
-            if(!ok) alert('Error enviando la lectura (401/403/otra). Revisa credenciales.');
-        }catch(e){
+            if (!ok) {
+                alert('Error enviando lectura. Verifica credenciales.');
+            } else {
+                console.log('Simulación enviada:', payload);
+            }
+        } catch (e) {
             console.error(e);
-            alert('Fallo al enviar la lectura.');
+            alert('Fallo al enviar la lectura: ' + e.message);
         }
     });
 });
-
-async function sendReading(payload, user, pass){
-    if (!user || !pass){
-        const a = getAuth();
-        if (a){
-            const decoded = atob(a);
-            const parts = decoded.split(':');
-            user = parts[0]; pass = parts.slice(1).join(':');
-        }
-    }
-    const headers = { 'Content-Type': 'application/json' };
-    if (user && pass){
-        headers['Authorization'] = 'Basic ' + btoa(`${user}:${pass}`);
-    }
-    const res = await fetch('/api/sensors/reading', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-    });
-    return res.ok || res.status === 202;
-}
-
-// Init: comprobar sesión en el servidor; si autenticado conectar WS, si no mostrar overlay
-(async function initAuthConnect(){
+// Función mejorada para initAuthConnect
+(async function initAuthConnect() {
     try {
-        const res = await fetch('/api/auth/validate', { credentials: 'same-origin' });
+        const res = await fetch('/api/auth/validate', {
+            credentials: 'same-origin'
+        });
+
         if (res.ok) {
-            // autenticado por sesión; no enviamos header Basic al WS
-            connectWS({}, () => { updateCounters(); renderList(); }, () => { updateCounters(); renderList(); });
+            // Autenticado - conectar WebSocket
+            connectWS({}, () => {
+                updateCounters();
+                renderList();
+            }, (error) => {
+                console.error('WebSocket connection failed:', error);
+                updateCounters();
+                renderList();
+            });
         } else {
-            // no autenticado
+            // No autenticado - mostrar login
             showLogin();
             updateCounters();
             renderList();
         }
-    } catch(e){
-        // en caso de error de red mostramos el login para permitir pruebas locales
+    } catch(e) {
+        console.error('Auth validation failed:', e);
+        // En caso de error, permitir funcionamiento básico
         showLogin();
         updateCounters();
         renderList();
     }
 })();
+
+// Guardar credenciales después del login exitoso
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = $('#loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function() {
+            const user = $('#loginUser')?.value;
+            const pass = $('#loginPass')?.value;
+            if (user && pass) {
+                // Guardar en sessionStorage para usar en simulaciones
+                setAuth(btoa(`${user}:${pass}`));
+                sessionStorage.setItem('user', user);
+            }
+        });
+    }
+});
+
+// ... resto del código existente ...
 
 // Login / Logout UI
 if ($('#btnLogout')) $('#btnLogout').addEventListener('click', async () => {
@@ -281,9 +366,5 @@ function showLogin() {
     if (userInput) userInput.focus();
 }
 
-function hideLogin(){
-    const overlay = $('#loginOverlay');
-    if (overlay) overlay.style.display = 'none';
-}
 
-// Nota: buildSample() u otras utilidades pequeñas pueden estar definidas en otro lugar.
+
