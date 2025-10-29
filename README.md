@@ -60,7 +60,88 @@ Sistema de seguridad en tiempo real construido con Spring Boot que procesa lectu
 - Actuator expone endpoints para salud, métricas y volcado de hilos.
 - `logback-spring.xml` define salida de consola con timestamp y nombre de hilo.
 
-## Arquitectura (alto nivel)
+## Diagrama de Arquitectura del Sistema
+El siguiente diagrama presenta los componentes principales, límites de seguridad, y los flujos entre sensores, API, procesamiento, notificaciones y observabilidad.
+```mermaid
+%% contenido idéntico al archivo docs/architecture.mmd para vista inline
+flowchart LR
+  subgraph External[Fuera del Sistema]
+    Sensors[[Sensores\n(MOTION/TEMP/ACCESS)]]
+    Browser[[Operador/Admin\nNavegador SPA]]
+  end
+
+  subgraph Host[Servidor (Java 17, Spring Boot 3)]
+    direction TB
+
+    subgraph Security[Security Boundary]
+      Sec[Spring Security\nSecurityFilterChain\nInMemoryUserDetails]
+    end
+
+    subgraph API[REST API]
+      Ctrl[SensorController\nPOST /api/sensors/reading]
+      AuthCtrl[AuthController\nGET /api/auth/validate]
+    end
+
+    subgraph Processing[Procesamiento de Sensores]
+      Proc[SensorProcessingService\n@Async("sensorExecutor")]
+      Exec[[ThreadPoolTaskExecutor\n"sensorExecutor" (8–32)]]
+      subgraph Handlers[Handlers por Tipo]
+        H1[MotionSensorHandler]
+        H2[TemperatureSensorHandler]
+        H3[AccessSensorHandler]
+      end
+      AccessSvc[AccessControlService]
+    end
+
+    subgraph Notify[Notificaciones]
+      NSvc[NotificationService]
+      Broker[(STOMP Simple Broker\n/topic/alerts)]
+      EN[EmailNotifier]
+      PN[MobilePushNotifier]
+    end
+
+    subgraph Ops[Operación / Observabilidad]
+      Act[/Actuator\n/health /metrics /threaddump/]
+      Logs[[Logback Console]]
+    end
+  end
+
+  Sensors -- HTTP JSON --> Sec
+  Browser <-- HTML/CSS/JS -- Sec
+  Sec --> Ctrl
+  Sec --> AuthCtrl
+  Ctrl --> Proc
+  Proc --> Exec
+  Proc --> H1
+  Proc --> H2
+  Proc --> H3
+  H3 --> AccessSvc
+  Proc --> NSvc
+  NSvc --> Broker
+  NSvc --> EN
+  NSvc --> PN
+  Browser == STOMP/SockJS == Broker
+
+  Host --- Act
+  Host --- Logs
+```
+
+```mermaid
+%% contenido idéntico a docs/deployment.mmd para vista inline
+flowchart TB
+  User[Operador/Admin\nNavegador] -- HTTP/WS:8080 --> LB[Host Único]
+  Sensors[[Sensores en LAN]] -- HTTP:8080 --> LB
+
+  subgraph LB[Servidor]
+    JRE[Java 17 Runtime]
+    App[Spring Boot Jar\n(stark-security-concurrent)]
+    Broker[(STOMP Simple Broker)]
+  end
+
+  App --- Broker
+  classDef infra fill:#eef,stroke:#88a
+  class LB,JRE infra
+```
 ```mermaid
 flowchart LR
   subgraph External
@@ -96,34 +177,6 @@ flowchart LR
   SpringBoot --- Logs
 ```
 
-### Diagrama de Secuencia (ingesta → alerta → UI)
-```mermaid
-sequenceDiagram
-  participant C as Cliente (cURL/Servicio)
-  participant Sec as Spring Security
-  participant Ctrl as SensorController
-  participant Proc as SensorProcessingService
-  participant Acc as AccessControlService
-  participant Noti as NotificationService
-  participant WS as STOMP Broker (/topic/alerts)
-  participant UI as Navegador (SPA)
-
-  C->>Sec: POST /api/sensors/reading (JSON)
-  Sec-->>C: 401 si no autenticado
-  Sec->>Ctrl: Request autenticado
-  Ctrl->>Proc: process(reading)
-  alt type = ACCESS y badge inválido
-    Proc->>Acc: isAuthorized(badge)
-    Acc-->>Proc: false
-    Proc->>Noti: raise/notifyAlert(Alert)
-    Noti->>WS: convertAndSend(/topic/alerts, Alert)
-    WS-->>UI: Alert recibido
-  else otros tipos y umbrales
-    Proc->>Noti: raise/notifyAlert(Alert) cuando aplica
-    Noti->>WS: convertAndSend
-    WS-->>UI: Alert recibido
-  end
-  Ctrl-->>C: 202 Accepted ("OK")
 ```
 
 ## Estructura de archivos (relevantes)
@@ -166,4 +219,3 @@ curl -u admin:admin123 -H "Content-Type: application/json" \
 ---
 
 © Stark Industries — Caso práctico tema 1
-
