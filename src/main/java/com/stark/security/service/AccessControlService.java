@@ -2,11 +2,11 @@ package com.stark.security.service;
 
 import org.springframework.stereotype.Service;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
 
 @Service
 public class AccessControlService {
-  private final Set<String> authorizedBadges = ConcurrentHashMap.newKeySet();
+  private final Set<String> authorizedBadges = new HashSet<>();
 
   public AccessControlService() {
     // preload some authorized badges
@@ -18,11 +18,5 @@ public class AccessControlService {
     return authorizedBadges.contains(badgeId);
   }
 
-  public void authorize(String badgeId) {
-    authorizedBadges.add(badgeId);
-  }
-
-  public void revoke(String badgeId) {
-    authorizedBadges.remove(badgeId);
-  }
 }
+

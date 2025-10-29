@@ -6,8 +6,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.CompletableFuture;
-
 @RestController
 @RequestMapping("/api/sensors")
 public class SensorController {
@@ -18,8 +16,8 @@ public class SensorController {
   }
 
   @PostMapping("/reading")
-  public CompletableFuture<ResponseEntity<String>> ingest(@Valid @RequestBody SensorReading reading) {
-    return processingService.process(reading)
-        .thenApply(res -> ResponseEntity.accepted().body(res));
+  public ResponseEntity<String> ingest(@Valid @RequestBody SensorReading reading) {
+    processingService.process(reading);
+    return ResponseEntity.accepted().body("OK");
   }
 }

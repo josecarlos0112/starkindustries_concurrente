@@ -10,3 +10,4 @@ public record SensorReading(
     @PositiveOrZero double value,
     String metadata
 ) {}
+

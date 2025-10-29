@@ -70,3 +70,18 @@ body{
     .panel:nth-of-type(5){grid-column: span 12;}
 }
 .footer{color:var(--muted); text-align:center; padding:20px 0}
+
+/* Login overlay */
+.topbar .btn--logout{ margin-left:12px; background:#2b3446; color:var(--text); border-radius:8px; padding:6px 10px; font-weight:600; }
+.login-overlay{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background: rgba(2,6,10,0.6); z-index:50;
+}
+.login-panel{
+    width:360px; background:var(--panel); border:1px solid #222a39; padding:20px; border-radius:12px;
+    box-shadow:var(--shadow);
+}
+.login-panel h3{ margin:0 0 8px 0; color:var(--text) }
+.login-row{ display:flex; gap:8px; margin-bottom:10px; align-items:center }
+.login-row input, .login-row select{ flex:1; background:#0f1422; border:1px solid #1f2633; color:var(--text); padding:8px 10px; border-radius:8px }
+.login-error{ color:var(--danger); font-size:13px; margin-top:8px; display:none }
