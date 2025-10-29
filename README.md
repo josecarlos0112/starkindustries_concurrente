@@ -62,52 +62,53 @@ Sistema de seguridad en tiempo real construido con Spring Boot que procesa lectu
 
 ## Diagrama de Arquitectura del Sistema
 El siguiente diagrama presenta los componentes principales, límites de seguridad, y los flujos entre sensores, API, procesamiento, notificaciones y observabilidad.
-```mermaid
-%% contenido idéntico al archivo docs/architecture.mmd para vista inline
+```mermaidsssss
 flowchart LR
-  subgraph External[Fuera del Sistema]
-    Sensors[[Sensores\n(MOTION/TEMP/ACCESS)]]
-    Browser[[Operador/Admin\nNavegador SPA]]
+%%{init: {'flowchart': {'htmlLabels': true}} }%%
+flowchart LR
+  subgraph External["Fuera del Sistema"]
+    Sensors["Sensores<br/>(MOTION / TEMP / ACCESS)"]
+    Browser["Operador/Admin<br/>Navegador SPA"]
   end
 
-  subgraph Host[Servidor (Java 17, Spring Boot 3)]
+  subgraph Host["Servidor Java 17 - Spring Boot 3"]
     direction TB
 
-    subgraph Security[Security Boundary]
-      Sec[Spring Security\nSecurityFilterChain\nInMemoryUserDetails]
+    subgraph Security["Security Boundary"]
+      Sec["Spring Security<br/>SecurityFilterChain<br/>InMemoryUserDetails"]
     end
 
-    subgraph API[REST API]
-      Ctrl[SensorController\nPOST /api/sensors/reading]
-      AuthCtrl[AuthController\nGET /api/auth/validate]
+    subgraph API["REST API"]
+      Ctrl["SensorController<br/>POST /api/sensors/reading"]
+      AuthCtrl["AuthController<br/>GET /api/auth/validate"]
     end
 
-    subgraph Processing[Procesamiento de Sensores]
-      Proc[SensorProcessingService\n@Async("sensorExecutor")]
-      Exec[[ThreadPoolTaskExecutor\n"sensorExecutor" (8–32)]]
-      subgraph Handlers[Handlers por Tipo]
-        H1[MotionSensorHandler]
-        H2[TemperatureSensorHandler]
-        H3[AccessSensorHandler]
+    subgraph Processing["Procesamiento de Sensores"]
+      Proc["SensorProcessingService<br/>@Async(&quot;sensorExecutor&quot;)"]
+      Exec["ThreadPoolTaskExecutor<br/>&quot;sensorExecutor&quot; (8-32)"]
+      subgraph Handlers["Handlers por Tipo"]
+        H1["MotionSensorHandler"]
+        H2["TemperatureSensorHandler"]
+        H3["AccessSensorHandler"]
       end
-      AccessSvc[AccessControlService]
+      AccessSvc["AccessControlService"]
     end
 
-    subgraph Notify[Notificaciones]
-      NSvc[NotificationService]
-      Broker[(STOMP Simple Broker\n/topic/alerts)]
-      EN[EmailNotifier]
-      PN[MobilePushNotifier]
+    subgraph Notify["Notificaciones"]
+      NSvc["NotificationService"]
+      Broker["STOMP Broker<br/>/topic/alerts"]
+      EN["EmailNotifier"]
+      PN["MobilePushNotifier"]
     end
 
-    subgraph Ops[Operación / Observabilidad]
-      Act[/Actuator\n/health /metrics /threaddump/]
-      Logs[[Logback Console]]
+    subgraph Ops["Operación / Observabilidad"]
+      Act["Actuator<br/>/health /metrics /threaddump/"]
+      Logs["Logback Console"]
     end
   end
 
-  Sensors -- HTTP JSON --> Sec
-  Browser <-- HTML/CSS/JS -- Sec
+  Sensors -->|HTTP JSON| Sec
+  Browser <-->|HTML/CSS/JS| Sec
   Sec --> Ctrl
   Sec --> AuthCtrl
   Ctrl --> Proc
@@ -120,7 +121,7 @@ flowchart LR
   NSvc --> Broker
   NSvc --> EN
   NSvc --> PN
-  Browser == STOMP/SockJS == Broker
+  Browser -- "STOMP/SockJS" --> Broker
 
   Host --- Act
   Host --- Logs
