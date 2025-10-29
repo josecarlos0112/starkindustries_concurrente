@@ -2,7 +2,7 @@
 
 ## Integrantes del grupo
 - José Carlos Zorrilla García
-- Daniel de Alfonso Martínez
+- Daniel de Alfonso Sánchez
 - Dmitry Kravets
 
 ## Resumen de la solución
