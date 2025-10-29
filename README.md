@@ -62,8 +62,8 @@ Sistema de seguridad en tiempo real construido con Spring Boot que procesa lectu
 
 ## Diagrama de Arquitectura del Sistema
 El siguiente diagrama presenta los componentes principales, límites de seguridad, y los flujos entre sensores, API, procesamiento, notificaciones y observabilidad.
-```mermaidsssss
-flowchart LR
+![img.png](img.png)
+```mermaid
 %%{init: {'flowchart': {'htmlLabels': true}} }%%
 flowchart LR
   subgraph External["Fuera del Sistema"]
