@@ -15,6 +15,29 @@ function getAuth(){ return sessionStorage.getItem('auth'); }
 function setAuth(base64){ sessionStorage.setItem('auth', base64); }
 function clearAuth(){ sessionStorage.removeItem('auth'); sessionStorage.removeItem('user'); }
 
+// Elementos DOM - Almacenar en variables para reutilizar
+const domElements = {
+    wsDot: $('#wsDot'),
+    wsText: $('#wsText'),
+    btnLogout: $('#btnLogout'),
+    countTotal: $('#countTotal'),
+    countMotion: $('#countMotion'),
+    countAccess: $('#countAccess'),
+    countTemp: $('#countTemp'),
+    btnPause: $('#btnPause'),
+    btnResume: $('#btnResume'),
+    btnClear: $('#btnClear'),
+    alerts: $('#alerts'),
+    searchBox: $('#searchBox'),
+    loginOverlay: $('#loginOverlay'),
+    loginError: $('#loginError'),
+    loginPreset: $('#loginPreset'),
+    loginUser: $('#loginUser'),
+    loginPass: $('#loginPass'),
+    loginForm: $('#loginForm'),
+    chartCtx: $('#rateChart')
+};
+
 // WebSocket / STOMP
 function connectWS(headers = {}, onSuccess, onError){
     if (stomp && stomp.connected){
@@ -39,13 +62,10 @@ function connectWS(headers = {}, onSuccess, onError){
 }
 
 function setConnected(on){
-    const dot = $('#wsDot');
-    const txt = $('#wsText');
-    if (dot) dot.className = 'dot ' + (on ? 'dot--connected' : 'dot--disconnected');
-    if (txt) txt.textContent = on ? 'Conectado' : 'Desconectado';
-    const logoutBtn = $('#btnLogout');
+    if (domElements.wsDot) domElements.wsDot.className = 'dot ' + (on ? 'dot--connected' : 'dot--disconnected');
+    if (domElements.wsText) domElements.wsText.textContent = on ? 'Conectado' : 'Desconectado';
     // Siempre mostrar el botón de cerrar sesión
-    if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    if (domElements.btnLogout) domElements.btnLogout.style.display = 'inline-block';
 }
 
 // Manejo de alertas entrantes (única definición)
@@ -64,20 +84,18 @@ function onAlert(alert){
 
 // Render
 function updateCounters(){
-    if ($('#countTotal')) $('#countTotal').textContent = counters.total;
-    if ($('#countMotion')) $('#countMotion').textContent = counters.MOTION || 0;
-    if ($('#countAccess')) $('#countAccess').textContent = counters.ACCESS || 0;
-    if ($('#countTemp')) $('#countTemp').textContent = counters.TEMPERATURE || 0;
+    if (domElements.countTotal) domElements.countTotal.textContent = counters.total;
+    if (domElements.countMotion) domElements.countMotion.textContent = counters.MOTION || 0;
+    if (domElements.countAccess) domElements.countAccess.textContent = counters.ACCESS || 0;
+    if (domElements.countTemp) domElements.countTemp.textContent = counters.TEMPERATURE || 0;
 }
 
 function renderList(){
     const types = $$('.flt-type').filter(c => c.checked).map(c => c.value);
-    const qElem = $('#searchBox');
-    const q = qElem ? qElem.value.trim().toLowerCase() : '';
+    const q = domElements.searchBox ? domElements.searchBox.value.trim().toLowerCase() : '';
 
-    const list = $('#alerts');
-    if (!list) return;
-    list.innerHTML = '';
+    if (!domElements.alerts) return;
+    domElements.alerts.innerHTML = '';
 
     alerts
         .filter(a => types.includes(a.type))
@@ -95,23 +113,25 @@ function renderList(){
                 <span><strong>${a.severity || ''}</strong> • ${a.sensorId || ''} — ${a.message || ''}</span>
                 <span class="meta">${fmtTime(a.timestamp)}</span>
             `;
-            list.appendChild(li);
+            domElements.alerts.appendChild(li);
         });
 }
 
 // Controles
-if ($('#btnPause')) $('#btnPause').addEventListener('click', () => {
+if (domElements.btnPause) domElements.btnPause.addEventListener('click', () => {
     paused = true;
-    $('#btnPause').disabled = true;
-    $('#btnResume').disabled = false;
+    domElements.btnPause.disabled = true;
+    domElements.btnResume.disabled = false;
 });
-if ($('#btnResume')) $('#btnResume').addEventListener('click', () => {
+
+if (domElements.btnResume) domElements.btnResume.addEventListener('click', () => {
     paused = false;
-    $('#btnPause').disabled = false;
-    $('#btnResume').disabled = true;
+    domElements.btnPause.disabled = false;
+    domElements.btnResume.disabled = true;
     renderList();
 });
-if ($('#btnClear')) $('#btnClear').addEventListener('click', () => {
+
+if (domElements.btnClear) domElements.btnClear.addEventListener('click', () => {
     alerts = [];
     counters.total = counters.MOTION = counters.ACCESS = counters.TEMPERATURE = 0;
     updateCounters();
@@ -119,9 +139,8 @@ if ($('#btnClear')) $('#btnClear').addEventListener('click', () => {
 });
 
 // Chart (eventos/minuto)
-const chartCtx = $('#rateChart');
 const chartData = { labels: [], datasets: [{ label: 'Eventos/min', data: [] }] };
-const rateChart = chartCtx ? new Chart(chartCtx, {
+const rateChart = domElements.chartCtx ? new Chart(domElements.chartCtx, {
     type: 'line',
     data: chartData,
     options: {
@@ -162,9 +181,6 @@ function appendPoint(label, value){
 }
 
 setInterval(() => pushChartPoint(), 5000);
-
-// javascript
-// ... código existente ...
 
 // Función mejorada para enviar lecturas
 async function sendReading(payload, user, pass) {
@@ -259,6 +275,7 @@ $$('[data-sim]').forEach(btn => {
         }
     });
 });
+
 // Función mejorada para initAuthConnect
 (async function initAuthConnect() {
     try {
@@ -271,16 +288,19 @@ $$('[data-sim]').forEach(btn => {
             connectWS({}, () => {
                 updateCounters();
                 renderList();
+                initFilters();
             }, (error) => {
                 console.error('WebSocket connection failed:', error);
                 updateCounters();
                 renderList();
+                initFilters();
             });
         } else {
             // No autenticado - mostrar login
             showLogin();
             updateCounters();
             renderList();
+            initFilters();
         }
     } catch(e) {
         console.error('Auth validation failed:', e);
@@ -288,16 +308,16 @@ $$('[data-sim]').forEach(btn => {
         showLogin();
         updateCounters();
         renderList();
+        initFilters();
     }
 })();
 
 // Guardar credenciales después del login exitoso
 document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = $('#loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function() {
-            const user = $('#loginUser')?.value;
-            const pass = $('#loginPass')?.value;
+    if (domElements.loginForm) {
+        domElements.loginForm.addEventListener('submit', function() {
+            const user = domElements.loginUser?.value;
+            const pass = domElements.loginPass?.value;
             if (user && pass) {
                 // Guardar en sessionStorage para usar en simulaciones
                 setAuth(btoa(`${user}:${pass}`));
@@ -307,10 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ... resto del código existente ...
-
 // Login / Logout UI
-if ($('#btnLogout')) $('#btnLogout').addEventListener('click', async () => {
+if (domElements.btnLogout) domElements.btnLogout.addEventListener('click', async () => {
     try { await fetch('/logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
     // limpiar credenciales cliente y recargar
     sessionStorage.removeItem('serverAuth');
@@ -318,53 +336,84 @@ if ($('#btnLogout')) $('#btnLogout').addEventListener('click', async () => {
     location.reload();
 });
 
-if ($('#loginPreset')) $('#loginPreset').addEventListener('change', (e) => {
+if (domElements.loginPreset) domElements.loginPreset.addEventListener('change', (e) => {
     const val = e.target.value;
-    if (val && $('#loginUser')) $('#loginUser').value = val;
+    if (val && domElements.loginUser) domElements.loginUser.value = val;
 });
 
 // showLogin / hideLogin completas y seguras
 function showLogin() {
-    const overlay = $('#loginOverlay');
-    const err = $('#loginError');
-    const preset = $('#loginPreset');
-    const userInput = $('#loginUser');
-    const passInput = $('#loginPass');
-
-    if (!overlay) return;
+    if (!domElements.loginOverlay) return;
 
     // Mostrar mensaje de error si la URL contiene ?loginError
     const params = new URLSearchParams(window.location.search);
     const loginError = params.get('loginError');
-    if (err) {
+    if (domElements.loginError) {
         if (loginError) {
-            err.style.display = 'block';
-            err.textContent = 'Credenciales inválidas.';
+            domElements.loginError.style.display = 'block';
+            domElements.loginError.textContent = 'Credenciales inválidas.';
             // quitar el parámetro de la URL sin recargar
             params.delete('loginError');
             const newUrl = window.location.pathname + (params.toString() ? ('?' + params.toString()) : '');
             history.replaceState(null, '', newUrl);
         } else {
-            err.style.display = 'none';
-            err.textContent = '';
+            domElements.loginError.style.display = 'none';
+            domElements.loginError.textContent = '';
         }
     }
 
-    overlay.style.display = 'flex';
+    domElements.loginOverlay.style.display = 'flex';
 
     const auth = getAuth();
     if (auth) {
         const savedUser = sessionStorage.getItem('user') || '';
-        if (userInput) userInput.value = savedUser;
-        if (passInput) passInput.value = '';
+        if (domElements.loginUser) domElements.loginUser.value = savedUser;
+        if (domElements.loginPass) domElements.loginPass.value = '';
     } else {
-        if (userInput) userInput.value = '';
-        if (passInput) passInput.value = '';
-        if (preset) preset.value = '';
+        if (domElements.loginUser) domElements.loginUser.value = '';
+        if (domElements.loginPass) domElements.loginPass.value = '';
+        if (domElements.loginPreset) domElements.loginPreset.value = '';
     }
 
-    if (userInput) userInput.focus();
+    if (domElements.loginUser) domElements.loginUser.focus();
 }
 
+function initFilters() {
+    console.log('Inicializando filtros...'); // Debug
 
+    // Event listeners para checkboxes de tipo
+    const typeCheckboxes = $$('.flt-type');
+    typeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            console.log('Checkbox cambiado:', this.value, this.checked); // Debug
+            renderList();
+        });
+    });
 
+    // Event listener para la barra de búsqueda
+    if (domElements.searchBox) {
+        let searchTimeout;
+        domElements.searchBox.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                console.log('Búsqueda cambiada:', this.value); // Debug
+                renderList();
+            }, 300);
+        });
+
+        // También permitir Enter para búsqueda inmediata
+        domElements.searchBox.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                console.log('Enter presionado en búsqueda'); // Debug
+                renderList();
+            }
+        });
+    }
+
+    console.log('Filtros inicializados'); // Debug
+}
+
+// Inicializar filtros cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initFilters();
+});
